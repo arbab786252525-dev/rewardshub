@@ -1,47 +1,35 @@
-
 const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+// Static require ensures Vercel bundler packages the JSON file correctly without path errors
+const serviceAccount = require('./serviceAccountKey.json');
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
+
+const db = admin.firestore();
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: "am-smm-panel-1146b",
-      clientEmail: "firebase-adminsdk-fbsvc@am-smm-panel-1146b.iam.gserviceaccount.com",
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
-}
-
-const db = admin.firestore();
+const SECRET_KEY = "arbab_rewards_secure_key_99";
 
 // Postback Endpoint
 app.get('/postback', async (req, res) => {
   const { userid, reward, key } = req.query;
 
-  if (!process.env.POSTBACK_SECRET || key !== process.env.POSTBACK_SECRET) {
-    return res.status(403).json({
-      error: "Unauthorized: Invalid postback key"
-    });
+  if (key !== SECRET_KEY) {
+    return res.status(403).json({ error: "Unauthorized: Invalid secret postback key" });
   }
 
-  const rewardAmount = Number(reward);
-
-  if (
-    !userid ||
-    typeof userid !== 'string' ||
-    !Number.isFinite(rewardAmount) ||
-    rewardAmount <= 0 ||
-    rewardAmount > 10000
-  ) {
-    return res.status(400).json({
-      error: "Invalid parameters"
-    });
+  const rewardAmount = parseFloat(reward);
+  if (!userid || isNaN(rewardAmount)) {
+    return res.status(400).json({ error: "Invalid parameters: 'userid' and numeric 'reward' are required" });
   }
 
   try {
@@ -49,21 +37,13 @@ app.get('/postback', async (req, res) => {
 
     await db.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
-
       if (!userDoc.exists) {
-        throw new Error("User not found");
+        throw new Error("User not found in Firestore database");
       }
 
       const userData = userDoc.data();
-      const currentBalance = Number(userData.availableBalance || 0);
-      const currentTotal = Number(userData.totalEarnings || 0);
-
-      if (
-        !Number.isFinite(currentBalance) ||
-        !Number.isFinite(currentTotal)
-      ) {
-        throw new Error("Invalid balance data");
-      }
+      const currentBalance = userData.availableBalance || 0;
+      const currentTotal = userData.totalEarnings || 0;
 
       transaction.update(userRef, {
         availableBalance: currentBalance + rewardAmount,
@@ -72,7 +52,6 @@ app.get('/postback', async (req, res) => {
       });
 
       const txRef = db.collection('transactions').doc();
-
       transaction.set(txRef, {
         userId: userid,
         type: "external_postback",
@@ -82,25 +61,19 @@ app.get('/postback', async (req, res) => {
       });
     });
 
-    return res.status(200).send(
-      "SUCCESS: Balance credited and logged successfully."
-    );
-
+    return res.status(200).send("SUCCESS: Balance credited and logged successfully.");
   } catch (err) {
-    console.error("Postback Processing Error:", err.message);
-
-    return res.status(500).json({
-      error: "Postback processing failed"
-    });
+    console.error("Postback Processing Error:", err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
-// Root Endpoint
 app.get('/', (req, res) => {
-  res.status(200).send(
-    'Rewards Hub Backend Server is Running Live & Secure!'
-  );
+  res.status(200).send('Rewards Hub Backend Server is Running Live & Secure!');
 });
 
-module.exports = app;
-    
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Rewards Hub Server listening on port ${PORT}`);
+});
+        
