@@ -2,10 +2,11 @@ const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
-// Initialize Firebase Admin using environment configuration or default credentials
+// Explicitly initialize Firebase Admin with your Project ID to prevent environment detection errors
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.applicationDefault()
+    credential: admin.credential.applicationDefault(),
+    projectId: "am-smm-panel-1146b"
   });
 }
 
@@ -15,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Secret Postback Key (Aap isay apni marzi se change bhi kar sakte hain)
+// Secret Postback Key
 const SECRET_KEY = "arbab_rewards_secure_key_99";
 
 // 1. Postback Endpoint (Handles external task rewards & balance updates)
