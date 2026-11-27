@@ -2,10 +2,45 @@ const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
-// Initialize Firebase using default serverless app environment
+// Robust Firebase initialization using split lines to avoid any string escaping issues
 if (!admin.apps.length) {
+  const privateKeyLines = [
+    "-----BEGIN PRIVATE KEY-----",
+    "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDZmBnuU0ckUG+G",
+    "DGTUmeO9eGFCUCGfcObwah2QGevGVzHk74wfDadPH2HQX/QRnTX9ouEz+zX/5tF4",
+    "baxrET7BIIOhO1ZrNScPKGEqoE9K4JTDvsNtvYEjz6kIw4iyW5BUWw0jgsAqEeNu",
+    "qqBramqqcTCse7ea50vmmoRrnY58oM9fEIKzNdvD9OZB60PHlobBzki4wybecRXb",
+    "kmmzgmZkHRtnv3yOJDiPkGhQYLZHmoVKMz2xdqtodI/t6QPJOJ5iQHJ35rC4c+LDi",
+    "ib+g3/cUEWReJtXX1uXoUTeavyh682QntglpQ1s/O0qeBqmCaSr83whE3Zi+IJ5V",
+    "f1xoQSQFAgMBAAECggEAApmFncpS7EUlv/U/8yZPiUD58H/ilvQTXkX2SnV00q7S",
+    "Ask15F0WZaSbV5D96oP1VC1xAVz7/S21zPmKeNEA7e/EgtWhp7A/4jd6SbcWm29p",
+    "d5k83n/IHjRp8Zfcdz0O0WMxGf6C6z3BeN4DAqWH1rd5fGYSAIDI8F1iPaLpQ+Xm",
+    "S+/gSXNcsU85Rxa48oSnQrUMPRiKoFr0xgTXuznMfSAozvv1zfhDaFnWPTexnQAM",
+    "0gvLvF+5/QIudsPzeMEofmy9jd2LV3+AuSPHGCKfpENP/J/rKtUEhEUCvFVMYed+",
+    "XQ7CeFhTxNHcBF/XgMX/ZGvzpyBQAUU/qBxCuCu7gQKBgQD/xa5YPakTlqWhlJlk",
+    "6DjIcZZt0wEWl4ID0xzDfck18k3c1cHu0NdEhERrp8XeoepW0q6BcOtYp9wRE69Q",
+    "44EiX6MiIg4oeevh9+/AIFKeFADCdt/c0jWc0wGTKKr9uaIpdvrFIgMhKbS4G+zq",
+    "/lGC2tEKvuXery6fDRkZz7BvZQKBgQDZybcZWd/HoWdFOo+m4sQmfePY44qSw096",
+    "VmYMwXSbqygXNfryC5BVM53iSoBG0mSmsHISbhFzfGsSTj0zVN2idrESXfXnN4j5",
+    "3QhuCfZe7CLcHuOmDw0QbWofl6qn6OsiUOVFOZXZliM7ymbxpUcCj3g5VEhwoalw",
+    "Sg+stn8oIQKBgCBJgw2ukvZfEP+Js6dyTSC4fgXVGhERBR+YecwPx+Ogd8XF0hpk",
+    "kJgcnkp8vlSxWdSl+dNrPrpNTlF1i68JWRbOvdgkNmdTpLw8wS4epm9AFSx3NyE4",
+    "A/6NAGjkPFmVImxbkaJq/bwk+KQ5Gjo76mw7VSInIPtwX9FCJQYGGr6lAoGBAMAs",
+    "WzG2eV0pEfwnaXzEGnswmK3YUn2gc/AqbtAQoHmANNcOXcnY5FoaOtXkEX7sxb3E",
+    "clPK5gE2pzA284/o8c0a2LKxUHvfKDH6lSasCcbGrRf49b2hCFEXiw4ngYG6aEkW",
+    "gsjrwMuHzL1Eo0PVKGyc9mP3+BfSvrWD1IL9YgShAoGBAPWkqO2Scjr0BAgjJUOJ",
+    "CHcn+2QyocpsdILSfaaFelTw8fdvSdfXvhBsG9jaLjrbQzuIunbI06NkFMBLRSVt",
+    "aRH0Warw4jxc8mxPIXtoChkjUXzmUprvcXy+sL/jf1J5NKkWn08x1tqz4M0a5T68",
+    "9DXFLd57mN/hEhhrrrRnjRdw",
+    "-----END PRIVATE KEY-----"
+  ].join("\n");
+
   admin.initializeApp({
-    projectId: "am-smm-panel-1146b"
+    credential: admin.credential.cert({
+      projectId: "am-smm-panel-1146b",
+      clientEmail: "firebase-adminsdk-fbsvc@am-smm-panel-1146b.iam.gserviceaccount.com",
+      privateKey: privateKeyLines
+    })
   });
 }
 
@@ -17,6 +52,7 @@ app.use(express.json());
 
 const SECRET_KEY = "arbab_rewards_secure_key_99";
 
+// Postback Endpoint
 app.get('/postback', async (req, res) => {
   const { userid, reward, key } = req.query;
 
@@ -73,4 +109,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Rewards Hub Server listening on port ${PORT}`);
 });
-      
+    
