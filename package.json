@@ -1,12 +1,9 @@
-
 {
-  "name": "rewards-hub-backend",
-  "version": "1.0.0",
-  "private": true,
-  "main": "index.js",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "firebase-admin": "^13.0.0"
-  }
+  "version": 2,
+  "builds": [
+    { "src": "index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "destination": "/index.js" }
+  ]
 }
