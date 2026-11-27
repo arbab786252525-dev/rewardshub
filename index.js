@@ -1,10 +1,14 @@
 const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
-const serviceAccount = require('./serviceAccountKey.json'); // Direct JSON file import
+const fs = require('fs');
+const path = require('path');
 
-// Initialize Firebase using the uploaded JSON file
+// Read serviceAccountKey.json securely using absolute path for Vercel
 if (!admin.apps.length) {
+  const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
